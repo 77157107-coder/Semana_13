@@ -2,6 +2,7 @@
 formulario.py
 Formulario de registro con validación - Semana 13
 Fondo azul metálico suavizado (50%) + ventana autoajustada.
+Incluye campo "Número de celular" (9 dígitos exactos).
 """
 import tkinter as tk
 from tkinter import messagebox
@@ -26,6 +27,7 @@ class FormularioRegistro:
         self.email        = tk.StringVar()
         self.password     = tk.StringVar()
         self.confirm_pass = tk.StringVar()
+        self.celular      = tk.StringVar()     #Nueva varubale
         self.edad         = tk.StringVar()
         self.genero       = tk.StringVar(value="")
         self.acepto       = tk.BooleanVar()
@@ -33,7 +35,7 @@ class FormularioRegistro:
         self.entries = {}
         self.crear_widgets()
         self.configurar_atajos()
-        self._ajustar_tamano()          # ← ventana al tamaño del contenido
+        self._ajustar_tamano()
 
         self.entries["nombre"].focus_set()
 
@@ -56,11 +58,13 @@ class FormularioRegistro:
             bg=self.COLOR_VENTANA, fg=self.COLOR_TEXTO
         ).grid(row=0, column=0, columnspan=2, pady=(0, 16))
 
+        
         campos = [
             ("Nombre completo *:",      "nombre",       False),
             ("Email *:",                "email",        False),
             ("Contraseña *:",           "password",     True),
             ("Confirmar contraseña *:", "confirm_pass", True),
+            ("Número de celular *:",    "celular",      False),   # Nuevo campo
             ("Edad *:",                 "edad",         False),
         ]
 
@@ -72,7 +76,7 @@ class FormularioRegistro:
             ).grid(row=i, column=0, sticky="e", pady=6, padx=(0, 10))
 
             entry = tk.Entry(
-                frame, textvariable=getattr(self, key), width=28,   # ← 28 (antes 35)
+                frame, textvariable=getattr(self, key), width=28,
                 show="*" if oculto else "", font=("Arial", 10),
                 relief="solid", bd=1, bg=self.COLOR_FONDO
             )
@@ -81,15 +85,15 @@ class FormularioRegistro:
                        lambda e, k=key: self._reset_color(k))
             self.entries[key] = entry
 
-        # Género
+        # Género (fila 7: +1 por el campo nuevo)
         tk.Label(
             frame, text="Género *:", anchor="e",
             font=("Arial", 10),
             bg=self.COLOR_VENTANA, fg=self.COLOR_TEXTO
-        ).grid(row=6, column=0, sticky="e", pady=6, padx=(0, 10))
+        ).grid(row=7, column=0, sticky="e", pady=6, padx=(0, 10))
 
         genero_frame = tk.Frame(frame, bg=self.COLOR_VENTANA)
-        genero_frame.grid(row=6, column=1, sticky="w")
+        genero_frame.grid(row=7, column=1, sticky="w")
         for opcion in ["Masculino", "Femenino", "Otro"]:
             tk.Radiobutton(
                 genero_frame, text=opcion, variable=self.genero,
@@ -101,7 +105,7 @@ class FormularioRegistro:
                 takefocus=1
             ).pack(side="left", padx=5)
 
-        # Checkbox
+        # Checkbox (fila 8: +1)
         tk.Checkbutton(
             frame, text="Acepto los términos y condiciones *",
             variable=self.acepto,
@@ -110,17 +114,18 @@ class FormularioRegistro:
             activeforeground=self.COLOR_TEXTO,
             selectcolor=self.COLOR_FONDO,
             takefocus=1
-        ).grid(row=7, column=0, columnspan=2, pady=10)
+        ).grid(row=8, column=0, columnspan=2, pady=10)
 
+        # Leyenda (fila 9: +1)
         tk.Label(
             frame, text="* Campos obligatorios",
             font=("Arial", 8, "italic"),
             fg="#4a5b6e", bg=self.COLOR_VENTANA
-        ).grid(row=8, column=0, columnspan=2, pady=(0, 8))
+        ).grid(row=9, column=0, columnspan=2, pady=(0, 8))
 
-        # Botones
+        # Botones (fila 10: +1)
         btn_frame = tk.Frame(frame, bg=self.COLOR_VENTANA)
-        btn_frame.grid(row=9, column=0, columnspan=2, pady=8)
+        btn_frame.grid(row=10, column=0, columnspan=2, pady=8)
         tk.Button(
             btn_frame, text="Registrar", command=self.validar,
             width=15, bg="#4CAF50", fg="white",
@@ -185,6 +190,19 @@ class FormularioRegistro:
         else:
             self._marcar("confirm_pass", True)
 
+        
+        # Se Agrego la configuracion del campo del celular
+
+        celular = self.celular.get().strip()
+        if not celular:
+            errores.append("• El número de celular es obligatorio")
+            self._marcar("celular", False)
+        elif not re.fullmatch(r"\d{9}", celular):
+            errores.append("• El número de celular debe tener exactamente 9 dígitos")
+            self._marcar("celular", False)
+        else:
+            self._marcar("celular", True)
+
         try:
             edad = int(self.edad.get())
             if not (15 <= edad <= 99):
@@ -212,14 +230,16 @@ class FormularioRegistro:
                 "Registro exitoso",
                 f"¡Bienvenido/a, {self.nombre.get()}!\n"
                 f"Email: {self.email.get()}\n"
+                f"Celular: {self.celular.get()}\n"
                 f"Edad: {self.edad.get()}\n"
                 f"Género: {self.genero.get()}"
             )
             self.limpiar()
 
     def limpiar(self):
+        # se agrega celualr al limpiado
         for var in [self.nombre, self.email, self.password,
-                    self.confirm_pass, self.edad, self.genero]:
+                    self.confirm_pass, self.celular, self.edad, self.genero]:
             var.set("")
         self.acepto.set(False)
         self._limpiar_marcas()
