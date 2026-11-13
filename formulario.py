@@ -1,7 +1,7 @@
 """
 formulario.py
 Formulario de registro con validación - Semana 13
-Fondo azul metálico.
+Fondo azul metálico suavizado (50%) + ventana autoajustada.
 """
 import tkinter as tk
 from tkinter import messagebox
@@ -9,18 +9,18 @@ import re
 
 
 class FormularioRegistro:
-    # Paleta: azul metálico + colores de retroalimentación
-    COLOR_VENTANA = "#3d5a80"   # azul metálico
-    COLOR_TEXTO   = "#ffffff"   # texto claro sobre azul
-    COLOR_OK      = "#d4edda"   # verde claro
-    COLOR_ERROR   = "#f8d7da"   # rojo claro
+    # Paleta: azul metálico al 50 % de intensidad + texto oscuro
+    COLOR_VENTANA = "#9eacbf"   # azul metálico aclarado 50 %
+    COLOR_TEXTO   = "#1a2634"   # texto oscuro para contraste
+    COLOR_OK      = "#d4edda"   # verde claro (retroalimentación)
+    COLOR_ERROR   = "#f8d7da"   # rojo claro (retroalimentación)
     COLOR_FONDO   = "#ffffff"   # blanco de los Entry
 
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Registro de Usuario - Semana 13")
-        self.root.geometry("560x680")
         self.root.configure(bg=self.COLOR_VENTANA)
+        self.root.resizable(False, False)
 
         self.nombre       = tk.StringVar()
         self.email        = tk.StringVar()
@@ -33,19 +33,28 @@ class FormularioRegistro:
         self.entries = {}
         self.crear_widgets()
         self.configurar_atajos()
+        self._ajustar_tamano()          # ← ventana al tamaño del contenido
 
         self.entries["nombre"].focus_set()
 
     # ------------------------------------------------------------------
+    def _ajustar_tamano(self):
+        """Fija el tamaño de la ventana al contenido real + margen."""
+        self.root.update_idletasks()
+        w = self.root.winfo_reqwidth()  + 20
+        h = self.root.winfo_reqheight() + 20
+        self.root.geometry(f"{w}x{h}")
+
+    # ------------------------------------------------------------------
     def crear_widgets(self):
-        frame = tk.Frame(self.root, padx=25, pady=20, bg=self.COLOR_VENTANA)
+        frame = tk.Frame(self.root, padx=25, pady=18, bg=self.COLOR_VENTANA)
         frame.pack(fill="both", expand=True)
 
         tk.Label(
             frame, text="Registro de Usuario",
-            font=("Arial", 18, "bold"),
+            font=("Arial", 16, "bold"),
             bg=self.COLOR_VENTANA, fg=self.COLOR_TEXTO
-        ).grid(row=0, column=0, columnspan=2, pady=(0, 20))
+        ).grid(row=0, column=0, columnspan=2, pady=(0, 16))
 
         campos = [
             ("Nombre completo *:",      "nombre",       False),
@@ -63,7 +72,7 @@ class FormularioRegistro:
             ).grid(row=i, column=0, sticky="e", pady=6, padx=(0, 10))
 
             entry = tk.Entry(
-                frame, textvariable=getattr(self, key), width=35,
+                frame, textvariable=getattr(self, key), width=28,   # ← 28 (antes 35)
                 show="*" if oculto else "", font=("Arial", 10),
                 relief="solid", bd=1, bg=self.COLOR_FONDO
             )
@@ -88,7 +97,7 @@ class FormularioRegistro:
                 bg=self.COLOR_VENTANA, fg=self.COLOR_TEXTO,
                 activebackground=self.COLOR_VENTANA,
                 activeforeground=self.COLOR_TEXTO,
-                selectcolor=self.COLOR_VENTANA,
+                selectcolor=self.COLOR_FONDO,
                 takefocus=1
             ).pack(side="left", padx=5)
 
@@ -99,19 +108,19 @@ class FormularioRegistro:
             bg=self.COLOR_VENTANA, fg=self.COLOR_TEXTO,
             activebackground=self.COLOR_VENTANA,
             activeforeground=self.COLOR_TEXTO,
-            selectcolor=self.COLOR_VENTANA,
+            selectcolor=self.COLOR_FONDO,
             takefocus=1
-        ).grid(row=7, column=0, columnspan=2, pady=12)
+        ).grid(row=7, column=0, columnspan=2, pady=10)
 
         tk.Label(
             frame, text="* Campos obligatorios",
             font=("Arial", 8, "italic"),
-            fg="#cfd8dc", bg=self.COLOR_VENTANA
-        ).grid(row=8, column=0, columnspan=2, pady=(0, 10))
+            fg="#4a5b6e", bg=self.COLOR_VENTANA
+        ).grid(row=8, column=0, columnspan=2, pady=(0, 8))
 
         # Botones
         btn_frame = tk.Frame(frame, bg=self.COLOR_VENTANA)
-        btn_frame.grid(row=9, column=0, columnspan=2, pady=10)
+        btn_frame.grid(row=9, column=0, columnspan=2, pady=8)
         tk.Button(
             btn_frame, text="Registrar", command=self.validar,
             width=15, bg="#4CAF50", fg="white",
@@ -220,4 +229,3 @@ class FormularioRegistro:
 if __name__ == "__main__":
     app = FormularioRegistro()
     app.root.mainloop()
-    
