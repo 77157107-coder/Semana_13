@@ -1,17 +1,72 @@
 """
 calculadora.py
 Calculadora básica con GUI - Semana 13
+Botones con esquinas redondeadas (Canvas).
 """
 import tkinter as tk
 from tkinter import messagebox
 import re
 
 
+# ----------------------------------------------------------------------
+#  Botón con esquinas redondeadas dibujado sobre un Canvas
+# ----------------------------------------------------------------------
+class RoundedButton(tk.Canvas):
+    def __init__(self, parent, text, command, bg, fg,
+                 w=72, h=62, radius=14,
+                 font=("Arial", 16, "bold"), parent_bg="#1e1e1e"):
+        super().__init__(parent, width=w, height=h, bg=parent_bg,
+                         highlightthickness=0, bd=0, takefocus=1)
+        self.command    = command
+        self.text       = text
+        self.bg_color   = bg
+        self.fg_color   = fg
+        self.radius     = radius
+        self.font       = font
+
+        self._draw()
+        self.bind("<Button-1>", lambda e: self.command())
+        self.bind("<Return>",   lambda e: self.command())
+        self.bind("<space>",    lambda e: self.command())
+        self.bind("<Enter>",    self._hover_in)
+        self.bind("<Leave>",    self._hover_out)
+
+    def _draw(self, hover=False):
+        self.delete("all")
+        w = int(self.cget("width"))
+        h = int(self.cget("height"))
+        r = self.radius
+        bg = self._lighten(self.bg_color) if hover else self.bg_color
+
+        # Cuatro esquinas redondeadas + dos rectángulos que las unen
+        self.create_oval(0,     0,     2*r, 2*r, fill=bg, outline=bg)
+        self.create_oval(w-2*r, 0,     w,   2*r, fill=bg, outline=bg)
+        self.create_oval(0,     h-2*r, 2*r, h,   fill=bg, outline=bg)
+        self.create_oval(w-2*r, h-2*r, w,   h,   fill=bg, outline=bg)
+        self.create_rectangle(r, 0, w-r, h, fill=bg, outline=bg)
+        self.create_rectangle(0, r, w, h-r, fill=bg, outline=bg)
+
+        self.create_text(w//2, h//2, text=self.text,
+                         fill=self.fg_color, font=self.font)
+
+    def _lighten(self, hex_color):
+        h = hex_color.lstrip("#")
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return f"#{min(255,r+30):02x}{min(255,g+30):02x}{min(255,b+30):02x}"
+
+    def _hover_in(self, _):
+        self._draw(hover=True)
+
+    def _hover_out(self, _):
+        self._draw(hover=False)
+
+
+# ----------------------------------------------------------------------
 class Calculadora:
     def __init__(self):
         self.ventana = tk.Tk()
         self.ventana.title("Calculadora - Semana 13")
-        self.ventana.geometry("340x480")
+        self.ventana.geometry("340x500")
         self.ventana.resizable(False, False)
         self.ventana.configure(bg="#1e1e1e")
 
@@ -34,7 +89,6 @@ class Calculadora:
         self.display.configure(takefocus=1)
 
     def _crear_botones(self):
-        # Botones con * y / para que coincidan con lo que se escribe en el display
         botones = [
             ('C',  '⌫',  '(',  ')'),
             ('7',  '8',  '9',  '/'),
@@ -57,20 +111,12 @@ class Calculadora:
                 else:
                     bg, fg = colores['numero']
 
-                tk.Button(
+                RoundedButton(
                     self.ventana, text=texto,
-                    font=("Arial", 16, "bold"),
-                    bg=bg, fg=fg, bd=0,
-                    activebackground="#555555",
-                    width=4, height=2,
                     command=lambda t=texto: self.click(t),
-                    takefocus=1
-                ).grid(row=i + 1, column=j, padx=3, pady=3, sticky="nsew")
-
-        for i in range(6):
-            self.ventana.rowconfigure(i, weight=1)
-        for j in range(4):
-            self.ventana.columnconfigure(j, weight=1)
+                    bg=bg, fg=fg,
+                    parent_bg="#1e1e1e"
+                ).grid(row=i + 1, column=j, padx=3, pady=3)
 
     # ------------------------------------------------------------------
     def _configurar_atajos(self):
@@ -102,14 +148,12 @@ class Calculadora:
         if not expresion.strip():
             return
 
-        # Validación 1: solo caracteres permitidos
         if not re.fullmatch(r"[0-9+\-*/(). ]+", expresion):
             messagebox.showerror("Error", "Expresión inválida")
             self._set_texto("")
             return
 
-        # Validación 2: rechazar operadores consecutivos (++, --, **, //, etc.)
-        # Esto hace que "++" Y "6++3" fallen (Python evaluaría "6++3" como 9)
+        # Rechaza operadores consecutivos (++, --, **, //, 6++3, etc.)
         if re.search(r"[+\-*/]{2,}", expresion):
             messagebox.showerror(
                 "Error", "Expresión inválida: operadores consecutivos"
@@ -120,7 +164,6 @@ class Calculadora:
         try:
             resultado = eval(expresion, {"__builtins__": {}}, {})
 
-            # Formateo: entero si aplica, si no máximo 3 decimales
             if isinstance(resultado, float):
                 if resultado.is_integer():
                     resultado = int(resultado)
@@ -148,3 +191,4 @@ class Calculadora:
 
 if __name__ == "__main__":
     Calculadora().run()
+    
