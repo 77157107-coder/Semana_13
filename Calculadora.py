@@ -13,16 +13,18 @@ import re
 # ----------------------------------------------------------------------
 class RoundedButton(tk.Canvas):
     def __init__(self, parent, text, command, bg, fg,
-                 w=72, h=62, radius=14,
+                 w=68, h=56, radius=14,
                  font=("Arial", 16, "bold"), parent_bg="#1e1e1e"):
         super().__init__(parent, width=w, height=h, bg=parent_bg,
                          highlightthickness=0, bd=0, takefocus=1)
-        self.command    = command
-        self.text       = text
-        self.bg_color   = bg
-        self.fg_color   = fg
-        self.radius     = radius
-        self.font       = font
+        self.command  = command
+        self.label    = text          # 'label' evita choque con tk.Canvas.text
+        self.bg_color = bg
+        self.fg_color = fg
+        self.radius   = radius
+        self.font     = font
+        self.btn_w    = w
+        self.btn_h    = h
 
         self._draw()
         self.bind("<Button-1>", lambda e: self.command())
@@ -33,20 +35,16 @@ class RoundedButton(tk.Canvas):
 
     def _draw(self, hover=False):
         self.delete("all")
-        w = int(self.cget("width"))
-        h = int(self.cget("height"))
-        r = self.radius
+        w, h, r = self.btn_w, self.btn_h, self.radius
         bg = self._lighten(self.bg_color) if hover else self.bg_color
 
-        # Cuatro esquinas redondeadas + dos rectángulos que las unen
-        self.create_oval(0,     0,     2*r, 2*r, fill=bg, outline=bg)
-        self.create_oval(w-2*r, 0,     w,   2*r, fill=bg, outline=bg)
-        self.create_oval(0,     h-2*r, 2*r, h,   fill=bg, outline=bg)
-        self.create_oval(w-2*r, h-2*r, w,   h,   fill=bg, outline=bg)
-        self.create_rectangle(r, 0, w-r, h, fill=bg, outline=bg)
-        self.create_rectangle(0, r, w, h-r, fill=bg, outline=bg)
-
-        self.create_text(w//2, h//2, text=self.text,
+        self.create_oval(0,      0,      2*r, 2*r, fill=bg, outline=bg)
+        self.create_oval(w-2*r,  0,      w,   2*r, fill=bg, outline=bg)
+        self.create_oval(0,      h-2*r,  2*r, h,   fill=bg, outline=bg)
+        self.create_oval(w-2*r,  h-2*r,  w,   h,   fill=bg, outline=bg)
+        self.create_rectangle(r, 0, w-r, h,   fill=bg, outline=bg)
+        self.create_rectangle(0, r, w,   h-r, fill=bg, outline=bg)
+        self.create_text(w//2, h//2, text=self.label,
                          fill=self.fg_color, font=self.font)
 
     def _lighten(self, hex_color):
@@ -66,7 +64,7 @@ class Calculadora:
     def __init__(self):
         self.ventana = tk.Tk()
         self.ventana.title("Calculadora - Semana 13")
-        self.ventana.geometry("340x500")
+        self.ventana.geometry("400x580")        # ← más ancho y alto
         self.ventana.resizable(False, False)
         self.ventana.configure(bg="#1e1e1e")
 
@@ -116,7 +114,13 @@ class Calculadora:
                     command=lambda t=texto: self.click(t),
                     bg=bg, fg=fg,
                     parent_bg="#1e1e1e"
-                ).grid(row=i + 1, column=j, padx=3, pady=3)
+                ).grid(row=i + 1, column=j, padx=4, pady=4)
+
+        # Que las celdas se repartan el espacio sobrante (centra los botones)
+        for i in range(6):
+            self.ventana.rowconfigure(i, weight=1)
+        for j in range(4):
+            self.ventana.columnconfigure(j, weight=1)
 
     # ------------------------------------------------------------------
     def _configurar_atajos(self):
@@ -153,7 +157,6 @@ class Calculadora:
             self._set_texto("")
             return
 
-        # Rechaza operadores consecutivos (++, --, **, //, 6++3, etc.)
         if re.search(r"[+\-*/]{2,}", expresion):
             messagebox.showerror(
                 "Error", "Expresión inválida: operadores consecutivos"
@@ -191,4 +194,3 @@ class Calculadora:
 
 if __name__ == "__main__":
     Calculadora().run()
-    
