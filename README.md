@@ -1,5 +1,11 @@
 Práctica de **Construcción de Software** · Universidad Continental
-**Autor:** <Sottec Velasque Junior Jeferson>
+
+
+
+**Autor:** Sottec Velasque Junior Jeferson
+
+
+
 **Docente:** Ing. Henderson Nozart Gibaja Reyes
 
 ## Contenido del repositorio
